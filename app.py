@@ -11,7 +11,8 @@ app.config.from_object(Config)
 db = SQLAlchemy(app)
 
 
-class Customer(db.Model):
+class User(db.Model):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
 
@@ -19,19 +20,23 @@ class Customer(db.Model):
                            default=datetime.utcnow)
     modified_at = db.Column(db.DateTime(timezone=True), index=True,
                             default=datetime.utcnow, onupdate=datetime.utcnow)
+    discriminator = db.Column('type', db.String(50))
+    __mapper_args__ = {'polymorphic_on': discriminator}
+
+
+class Customer(User):
+    __tablename__ = 'customer'
+    __mapper_args__ = {'polymorphic_identity': 'customer'}
+    id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
 
     def __repr__(self):
         return '<Customer %r>' % self.name
 
-class Agent(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), unique=True, nullable=False)
 
-    created_at = db.Column(db.DateTime(timezone=True), index=True,
-                           default=datetime.utcnow)
-    modified_at = db.Column(db.DateTime(timezone=True), index=True,
-                            default=datetime.utcnow, onupdate=datetime.utcnow)
-
+class Agent(User):
+    __tablename__ = 'agent'
+    __mapper_args__ = {'polymorphic_identity': 'agent'}
+    id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
 
     def __repr__(self):
         return '<Agent %r>' % self.name
@@ -59,6 +64,9 @@ class Message(db.Model):
     modified_at = db.Column(db.DateTime(timezone=True), index=True,
                             default=datetime.utcnow, onupdate=datetime.utcnow)
 
+
+# class IssueTicket(db.Model):
+#     pass
 
 
 @app.route('/')

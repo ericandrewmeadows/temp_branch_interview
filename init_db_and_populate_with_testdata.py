@@ -1,4 +1,4 @@
-from app import db, Customer, Agent, Message
+from app import db, User, Customer, Agent, Message
 
 db.drop_all()
 db.create_all()
