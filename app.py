@@ -1,4 +1,13 @@
-from flask import Flask, render_template, abort, request, flash
+from flask import (
+    Flask,
+    render_template,
+    abort,
+    request,
+    flash,
+    session,
+    redirect,
+    url_for,
+)
 from flask_sqlalchemy import SQLAlchemy
 
 from datetime import datetime
@@ -74,6 +83,19 @@ def index():
     return 'Hello World'
 
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    agents = Agent.query.all()
+    print(agents)
+
+    if request.method == 'POST':
+        # TODO (Eric):  switch from agent_id to user_id and then if statement
+        # for redirect to user or agent pages
+        session['user_id'] = request.form['agent_id']
+        return redirect(url_for('view_customers'))
+    return render_template('login.html', agents=agents)
+
+
 @app.route('/customer_test', methods=['GET', 'POST'])
 def customer_test():
     customers = Customer.query.all()
@@ -95,19 +117,25 @@ def customer_test():
         flash('Sent message "%s" for customer %s (id %d)' % (
             msg_body, customer.name, customer.id))
 
-
     return render_template('customer_test.html', customers=customers)
 
 
 @app.route('/admin/customers')
 def view_customers():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
     customers = Customer.query.all()
+    agent = Agent.query.get(user_id)
     return render_template('customers.html', customers=customers)
 
 @app.route('/admin/customer/<int:id>', methods=['GET', 'POST'])
 def view_customer(id):
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
     customer = Customer.query.get(id)
-    agents = Agent.query.all()
+    agent = Agent.query.get(user_id)
 
     if request.method == 'POST':
         msg_body = request.form.get('message')
@@ -118,5 +146,5 @@ def view_customer(id):
         db.session.commit()
 
 
-    return render_template('customer.html', customer=customer,
-                           agents=agents)
+    return render_template('agent_to_customer_messaging.html', customer=customer,
+                           agent=agent)

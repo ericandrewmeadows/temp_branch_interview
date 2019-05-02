@@ -1,3 +1,5 @@
+<h1>{{ agent.name }}</h1>
+
 <ul>
   {% for message in customer.messages %}
     <li>
@@ -12,13 +14,7 @@
   {% endfor %}
 </ul>
 
-
 <form action="" method="POST">
   <textarea name="message">Enter message here...</textarea>
-  <select name="agent">
-    {% for agent in agents %}
-      <option value="{{agent.id}}">{{ agent.name }}</option>
-    {% endfor %}
-  </select>
   <input type="submit">
 </form>

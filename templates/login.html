@@ -1,0 +1,19 @@
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class=flashes>
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+
+<form action="" method="POST">
+  <select name="agent_id">
+    {% for agent in agents %}
+      <option value="{{agent.id}}">{{ agent.name }}</option>
+    {% endfor %}
+  </select>
+  <input type="submit" value="Login">
+</form>
