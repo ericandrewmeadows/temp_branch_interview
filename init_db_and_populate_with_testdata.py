@@ -1,4 +1,4 @@
-from app import db, User, Customer, Agent, Message
+from app import db, User, Customer, Agent, Message, IssueTicket
 
 db.drop_all()
 db.create_all()
@@ -27,6 +27,26 @@ for name in agent_names:
     db.session.add(agent)
     agents.append(agent)
 db.session.commit()
+
+tickets = [
+    ("opened", customers[0].id, agents[0].id, "Test Opened"),
+    ("in_progress", customers[0].id, agents[0].id, "Test In Progress"),
+    ("closed", customers[0].id, agents[0].id, "Test Closed"),
+]
+created_tickets = []
+for ticket in tickets:
+    issue_ticket = IssueTicket(
+        ticket_status=ticket[0],
+        customer_id=ticket[1],
+        created_by=ticket[2],
+        summary="Test",
+        details=ticket[3]
+    )
+    db.session.add(issue_ticket)
+    created_tickets.append(issue_ticket)
+    print(issue_ticket)
+db.session.commit()
+
 
 threads = [
     [

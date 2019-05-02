@@ -18,3 +18,28 @@
   <textarea name="message">Enter message here...</textarea>
   <input type="submit">
 </form>
+
+<ul>
+    {% for ticket in customer.tickets %}
+      <li>
+        {{ ticket.created_at }}
+        <br/>
+        <b>Created by:</b> {{ ticket.created_by_user.name }}
+        <br/>
+        <b>Customer:</b> {{ customer.name }}
+        <br/>
+        <b>Summary:</b> {{  ticket.summary }}
+        <br/>
+        <b>Details:</b> {{  ticket.details }}
+      </li>
+      <br/>
+    {% endfor %}
+  </ul>
+
+<form action="create_ticket" method="POST">
+  <textarea name="summary">Enter ticket summary...</textarea>
+  <textarea name="details">Enter the details about the ticket...</textarea>
+  <input name="customer_id" type="hidden" value="{{ customer.id }}">
+  <input type="submit">
+</form>
+  

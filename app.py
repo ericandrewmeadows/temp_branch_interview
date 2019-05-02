@@ -74,8 +74,32 @@ class Message(db.Model):
                             default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
-# class IssueTicket(db.Model):
-#     pass
+import enum
+class TicketStatus(enum.Enum):
+    opened = 1
+    in_progress = 2
+    closed = 3
+
+
+class IssueTicket(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ticket_status = db.Column(db.Enum(TicketStatus))
+    summary = db.Column(db.String(100), nullable=False)
+    details = db.Column(db.String(), nullable=False)
+
+    customer_id = db.Column(
+        db.Integer, db.ForeignKey('customer.id'), nullable=False)
+    customer = db.relationship('Customer',
+        backref=db.backref('tickets', lazy=True), foreign_keys=[customer_id])
+
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_by_user = db.relationship('User',
+        backref=db.backref('tickets_created_by', lazy=True), foreign_keys=[created_by])
+
+    created_at = db.Column(db.DateTime(timezone=True), index=True,
+                           default=datetime.utcnow)
+    modified_at = db.Column(db.DateTime(timezone=True), index=True,
+                            default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 @app.route('/')
@@ -86,7 +110,6 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     agents = Agent.query.all()
-    print(agents)
 
     if request.method == 'POST':
         # TODO (Eric):  switch from agent_id to user_id and then if statement
@@ -148,3 +171,27 @@ def view_customer(id):
 
     return render_template('agent_to_customer_messaging.html', customer=customer,
                            agent=agent)
+
+@app.route('/admin/customer/create_ticket', methods=['POST'])
+def create_ticket():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+
+    customer_id = request.form.get('customer_id')
+    summary = request.form.get('summary')
+    details = request.form.get('details')
+
+    ticket = IssueTicket(
+        ticket_status="opened",
+        summary=summary,
+        details=details,
+        customer_id=customer_id,
+        created_by=user_id
+    )
+    db.session.add(ticket)
+    db.session.commit()
+
+    tickets = IssueTicket.query.all()
+
+    return redirect(url_for('view_customer', id=customer_id))
