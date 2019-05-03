@@ -143,20 +143,24 @@ def customer_test():
     return render_template('customer_test.html', customers=customers)
 
 
-@app.route('/admin/customers')
-def view_customers():
+
+def is_logged_in_or_redirect():
     user_id = session.get('user_id')
     if not user_id:
         return redirect(url_for('login'))
+    return user_id
+
+
+@app.route('/admin/customers')
+def view_customers():
+    user_id = is_logged_in_or_redirect()
     customers = Customer.query.all()
     agent = Agent.query.get(user_id)
-    return render_template('customers.html', customers=customers)
+    return render_template('customers.html', customers=customers, agent=agent)
 
 @app.route('/admin/customer/<int:id>', methods=['GET', 'POST'])
 def view_customer(id):
-    user_id = session.get('user_id')
-    if not user_id:
-        return redirect(url_for('login'))
+    user_id = is_logged_in_or_redirect()
     customer = Customer.query.get(id)
     agent = Agent.query.get(user_id)
 
@@ -174,9 +178,7 @@ def view_customer(id):
 
 @app.route('/admin/customer/create_ticket', methods=['POST'])
 def create_ticket():
-    user_id = session.get('user_id')
-    if not user_id:
-        return redirect(url_for('login'))
+    user_id = is_logged_in_or_redirect()
 
     customer_id = request.form.get('customer_id')
     summary = request.form.get('summary')
@@ -191,7 +193,5 @@ def create_ticket():
     )
     db.session.add(ticket)
     db.session.commit()
-
-    tickets = IssueTicket.query.all()
 
     return redirect(url_for('view_customer', id=customer_id))
